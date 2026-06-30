@@ -229,8 +229,12 @@ def _generate_with_fallback(prompt: str) -> str:
         raise ValueError("GenAI model is not configured.")
     import google.generativeai as genai
     models_to_try = [
+        "gemini-3.5-flash",
+        "gemini-2.5-flash",
+        "gemini-2.0-flash",
+        "gemini-flash-latest",
         "gemini-1.5-flash",
-        "gemini-1.5-flash-latest",
+        "gemini-pro-latest",
         "gemini-1.5-pro",
         "gemini-pro"
     ]
