@@ -1,9 +1,10 @@
 import uuid
 import random
+import re
 from datetime import datetime, timezone
 
 import os
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
@@ -37,12 +38,15 @@ app.add_middleware(
 )
 
 
-@app.get("/api/health")
+api_router = APIRouter()
+
+
+@api_router.get("/health")
 def health():
     return {"status": "ok", "ai_powered": is_ai_powered()}
 
 
-@app.post("/api/upload", response_model=DocumentUploadResponse)
+@api_router.post("/upload", response_model=DocumentUploadResponse)
 async def upload_document(file: UploadFile = File(...)):
     content = await file.read()
     if not content:
@@ -68,7 +72,7 @@ async def upload_document(file: UploadFile = File(...)):
     )
 
 
-@app.post("/api/detect/{document_id}", response_model=DetectionResponse)
+@api_router.post("/detect/{document_id}", response_model=DetectionResponse)
 def run_detection(document_id: str):
     record = get_document(document_id)
     if not record:
@@ -81,7 +85,7 @@ def run_detection(document_id: str):
     return DetectionResponse(document_id=document_id, entities=entities, ai_powered=ai_powered)
 
 
-@app.get("/api/document/{document_id}", response_model=DetectionResponse)
+@api_router.get("/document/{document_id}", response_model=DetectionResponse)
 def get_document_state(document_id: str):
     record = get_document(document_id)
     if not record:
@@ -89,7 +93,7 @@ def get_document_state(document_id: str):
     return DetectionResponse(document_id=document_id, entities=record.entities, ai_powered=record.ai_powered)
 
 
-@app.post("/api/entity/decision")
+@api_router.post("/entity/decision")
 def update_entity_decision(update: EntityDecisionUpdate):
     record = get_document(update.document_id)
     if not record:
@@ -105,7 +109,7 @@ def update_entity_decision(update: EntityDecisionUpdate):
     raise HTTPException(status_code=404, detail="Entity not found.")
 
 
-@app.post("/api/entity/add")
+@api_router.post("/entity/add")
 def add_entity(payload: dict):
     document_id = payload.get("document_id")
     entity_data = payload.get("entity")
@@ -120,7 +124,7 @@ def add_entity(payload: dict):
     return {"success": True, "entity": entity}
 
 
-@app.post("/api/challenge", response_model=ChallengeResponse)
+@api_router.post("/challenge", response_model=ChallengeResponse)
 def challenge_entity(req: ChallengeRequest):
     record = get_document(req.document_id)
     if not record:
@@ -140,7 +144,7 @@ def challenge_entity(req: ChallengeRequest):
     raise HTTPException(status_code=404, detail="Entity not found.")
 
 
-@app.post("/api/verify/{document_id}", response_model=VerificationResponse)
+@api_router.post("/verify/{document_id}", response_model=VerificationResponse)
 def verify_document(document_id: str):
     record = get_document(document_id)
     if not record:
@@ -166,7 +170,7 @@ def verify_document(document_id: str):
     return VerificationResponse(document_id=document_id, checks=checks, document_safe=document_safe)
 
 
-@app.get("/api/passport/{document_id}", response_model=TrustPassport)
+@api_router.get("/passport/{document_id}", response_model=TrustPassport)
 def get_trust_passport(document_id: str):
     record = get_document(document_id)
     if not record:
@@ -192,7 +196,7 @@ def get_trust_passport(document_id: str):
     )
 
 
-@app.post("/api/playground/run")
+@api_router.post("/playground/run")
 def run_playground(payload: dict):
     prompt = payload.get("prompt", "")
     protected_text = payload.get("protected_text", "")
@@ -239,7 +243,7 @@ def run_playground(payload: dict):
     return {"response": response, "ai_powered": False}
 
 
-@app.get("/api/export/{document_id}/text")
+@api_router.get("/export/{document_id}/text")
 def export_protected_text(document_id: str):
     record = get_document(document_id)
     if not record:
@@ -258,7 +262,7 @@ def export_protected_text(document_id: str):
     return {"document_id": document_id, "protected_text": text}
 
 
-@app.get("/api/export/{document_id}/json")
+@api_router.get("/export/{document_id}/json")
 def export_json_report(document_id: str):
     record = get_document(document_id)
     if not record:
@@ -272,6 +276,10 @@ def export_json_report(document_id: str):
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "entities": [e.model_dump() for e in record.entities],
     }
+
+
+app.include_router(api_router, prefix="/api")
+app.include_router(api_router)
 
 
 # SPA & Static Assets Serving
