@@ -2,8 +2,11 @@ import uuid
 import random
 from datetime import datetime, timezone
 
+import os
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, JSONResponse
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -269,3 +272,37 @@ def export_json_report(document_id: str):
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "entities": [e.model_dump() for e in record.entities],
     }
+
+
+# SPA & Static Assets Serving
+# Check for built frontend in static folder or relative dist folder
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+frontend_dist = os.path.join(os.path.dirname(__file__), "../../frontend/dist")
+
+serve_dir = static_dir if os.path.exists(static_dir) else (frontend_dist if os.path.exists(frontend_dist) else None)
+
+if serve_dir and os.path.exists(os.path.join(serve_dir, "assets")):
+    app.mount("/assets", StaticFiles(directory=os.path.join(serve_dir, "assets")), name="assets")
+
+@app.get("/{full_path:path}")
+async def serve_spa_or_api_message(full_path: str):
+    if full_path.startswith("api/"):
+        return JSONResponse(status_code=404, content={"detail": f"API endpoint /{full_path} not found"})
+    
+    if serve_dir and os.path.exists(os.path.join(serve_dir, "index.html")):
+        # Check if file exists in static root (like favicon.ico or robots.txt)
+        file_path = os.path.join(serve_dir, full_path)
+        if full_path and os.path.isfile(file_path):
+            return FileResponse(file_path)
+        # Fallback to index.html for React Router SPA routes (/upload, /verify, etc.)
+        return FileResponse(os.path.join(serve_dir, "index.html"))
+    
+    return JSONResponse(
+        status_code=200,
+        content={
+            "status": "online",
+            "service": "Sanjaya API Backend",
+            "message": "Backend server is running properly. Please connect your frontend via VITE_API_URL or build and copy frontend/dist to backend/app/static."
+        }
+    )
+
