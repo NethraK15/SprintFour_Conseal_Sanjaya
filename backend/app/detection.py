@@ -224,13 +224,38 @@ DOCUMENT TEXT:
 """
 
 
+def _generate_with_fallback(prompt: str) -> str:
+    if _genai_model is None:
+        raise ValueError("GenAI model is not configured.")
+    import google.generativeai as genai
+    models_to_try = [
+        "gemini-1.5-flash",
+        "gemini-1.5-flash-latest",
+        "gemini-1.5-pro",
+        "gemini-pro"
+    ]
+    last_error = None
+    for model_name in models_to_try:
+        try:
+            model = genai.GenerativeModel(model_name)
+            response = model.generate_content(prompt)
+            return response.text.strip()
+        except Exception as e:
+            last_error = e
+            err_msg = str(e)
+            if "404" in err_msg or "not found" in err_msg or "not supported" in err_msg:
+                continue
+            else:
+                raise e
+    raise last_error
+
+
 def gemini_detect(full_text: str) -> Optional[List[DetectedEntity]]:
     if _genai_model is None:
         return None
     try:
         prompt = GEMINI_PROMPT.format(text=full_text[:12000])
-        response = _genai_model.generate_content(prompt)
-        raw = response.text.strip()
+        raw = _generate_with_fallback(prompt)
         raw = re.sub(r"^```json", "", raw).strip()
         raw = re.sub(r"^```", "", raw).strip()
         raw = re.sub(r"```$", "", raw).strip()
@@ -288,7 +313,6 @@ def run_playground_llm(prompt: str, protected_text: str) -> Optional[str]:
             "Do not reveal any private credentials."
         )
         full_prompt = f"{system_instruction}\n\n[USER PROMPT]\n{prompt}\n\n[DOCUMENT CONTEXT]\n{protected_text}"
-        response = _genai_model.generate_content(full_prompt)
-        return response.text.strip()
+        return _generate_with_fallback(full_prompt)
     except Exception as e:
         return f"Gemini Error: {str(e)}"
