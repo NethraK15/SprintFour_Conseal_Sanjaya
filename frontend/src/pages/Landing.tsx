@@ -72,10 +72,10 @@ export default function Landing() {
             transition={{ duration: 0.7, delay: 0.3 }}
             className="mt-10 flex items-center justify-center gap-4"
           >
-            <Button asChild size="lg" className="group">
+            <Button asChild size="lg" className="rounded-2xl shadow-soft hover:shadow-glow px-8 group transition-all duration-300">
               <Link to="/upload">
-                Witness the AI
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                Protect Your Document
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
           </motion.div>
@@ -122,8 +122,11 @@ export default function Landing() {
             Built for product managers, founders, and teams who want the power of AI without
             gambling on confidential data.
           </p>
-          <Button asChild size="lg">
-            <Link to="/upload">Get Started</Link>
+          <Button asChild size="lg" className="rounded-2xl shadow-soft hover:shadow-glow px-8 group transition-all duration-300">
+            <Link to="/upload" className="flex items-center gap-2">
+              Protect Your Document
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </Link>
           </Button>
         </div>
       </section>

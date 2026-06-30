@@ -52,16 +52,41 @@ export default function HighlightedDocument({ text, entities, mode, selectedId, 
 
     const isSelected = entity.id === selectedId;
     const decision = entity.user_decision;
-    const isSafeHighlight = decision === "REVEAL" || (!decision && entity.recommended_action === "REVEAL") || entity.type === "DATE" || entity.type === "ORGANIZATION";
+
+    const isRedacted = decision === "KEEP_HIDDEN" || 
+      (decision === null && entity.recommended_action === "KEEP_HIDDEN");
+
+    const isSafeHighlight = !isRedacted && (
+      decision === "REVEAL" ||
+      (decision === null && (entity.recommended_action === "REVEAL" || entity.type === "DATE" || entity.type === "ORGANIZATION"))
+    );
+
+    const isEdited = decision === "EDIT";
+
     const showRevealedInProtected = mode === "protected" && isSafeHighlight;
     const displayText =
       mode === "original"
         ? entity.text
         : showRevealedInProtected
         ? entity.text
-        : decision === "EDIT" && entity.user_edited_text
+        : isEdited && entity.user_edited_text
         ? entity.user_edited_text
         : entity.placeholder;
+
+    let highlightClass = "";
+    if (isRedacted) {
+      if (mode === "protected") {
+        highlightClass = "bg-rose-50 text-rose-700 border-rose-200 line-through decoration-rose-400/70 font-mono px-1 text-[13px] tracking-wide";
+      } else {
+        highlightClass = "bg-rose-100/90 text-rose-950 border-rose-300 hover:bg-rose-200/80";
+      }
+    } else if (isSafeHighlight) {
+      highlightClass = "bg-emerald-50 text-emerald-950 border-emerald-300 underline decoration-emerald-600 decoration-dotted";
+    } else if (isEdited) {
+      highlightClass = "bg-purple-100 text-purple-950 border-purple-300 hover:bg-purple-200/80";
+    } else {
+      highlightClass = ENTITY_COLORS[entity.type];
+    }
 
     segments.push(
       <mark
@@ -72,9 +97,7 @@ export default function HighlightedDocument({ text, entities, mode, selectedId, 
         }}
         className={cn(
           "cursor-pointer rounded px-0.5 py-px border transition-all duration-200 font-medium",
-          isSafeHighlight
-            ? "bg-emerald-50 text-emerald-950 border-emerald-400/80 underline decoration-emerald-600 decoration-dotted"
-            : ENTITY_COLORS[entity.type],
+          highlightClass,
           isSelected && "ring-2 ring-primary ring-offset-1 shadow-sm",
           mode === "protected" && !showRevealedInProtected && "tracking-wider"
         )}

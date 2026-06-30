@@ -10,6 +10,7 @@ import AICourtroom from "@/components/AICourtroom";
 import { useDocument } from "@/hooks/useDocumentContext";
 import { api } from "@/lib/api";
 import type { DetectedEntity } from "@/types";
+import { cn } from "@/lib/utils";
 
 export default function Review() {
   const navigate = useNavigate();
@@ -17,6 +18,7 @@ export default function Review() {
   const [selected, setSelected] = useState<DetectedEntity | null>(null);
   const [courtroomOpen, setCourtroomOpen] = useState(false);
   const [courtroomEntity, setCourtroomEntity] = useState<DetectedEntity | null>(null);
+  const [activeMobileTab, setActiveMobileTab] = useState<"original" | "protected" | "inspector">("original");
 
   useEffect(() => {
     if (!documentId || !rawText) {
@@ -30,6 +32,12 @@ export default function Review() {
   const allReviewed = entities.length > 0 && reviewedCount === entities.length;
 
   const currentSelected = selected ? entities.find((e) => e.id === selected.id) ?? null : null;
+
+  useEffect(() => {
+    if (currentSelected) {
+      setActiveMobileTab("inspector");
+    }
+  }, [currentSelected]);
 
   const handleDecision = (entityId: string, decision: "KEEP_HIDDEN" | "REVEAL" | "EDIT", editedText?: string) => {
     updateEntityLocal(entityId, decision, editedText);
@@ -94,6 +102,7 @@ export default function Review() {
     };
     setEntities([...entities, newEntity]);
     setSelected(newEntity);
+    api.addEntity(documentId, newEntity).catch(() => {});
   };
 
   const handleChallenge = (entity: DetectedEntity) => {
@@ -140,11 +149,48 @@ export default function Review() {
         </div>
       </div>
 
+      {/* Mobile Tab Selector */}
+      <div className="flex lg:hidden bg-muted/60 p-1.5 rounded-2xl border border-border/60 mb-5 relative z-10">
+        <button
+          onClick={() => setActiveMobileTab("original")}
+          className={cn(
+            "flex-1 py-2 text-xs font-semibold rounded-xl transition-all",
+            activeMobileTab === "original" ? "bg-card text-foreground shadow-soft font-bold" : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Original Document
+        </button>
+        <button
+          onClick={() => setActiveMobileTab("protected")}
+          className={cn(
+            "flex-1 py-2 text-xs font-semibold rounded-xl transition-all",
+            activeMobileTab === "protected" ? "bg-card text-foreground shadow-soft font-bold" : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Protected Document
+        </button>
+        <button
+          onClick={() => setActiveMobileTab("inspector")}
+          className={cn(
+            "flex-1 py-2 text-xs font-semibold rounded-xl transition-all relative",
+            activeMobileTab === "inspector" ? "bg-card text-foreground shadow-soft font-bold" : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          Inspector
+          {currentSelected && (
+            <span className="absolute top-1.5 right-2 h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+          )}
+        </button>
+      </div>
+
       <div className="grid lg:grid-cols-[1fr_1fr_360px] gap-5 items-start">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden flex flex-col h-[650px] max-h-[72vh]"
+          className={cn(
+            "rounded-2xl border border-border bg-card shadow-soft overflow-hidden flex flex-col h-[650px] max-h-[72vh]",
+            activeMobileTab === "original" ? "flex" : "hidden lg:flex"
+          )}
         >
           <div className="flex items-center gap-2 px-5 py-3 border-b border-border/70 bg-muted/40 shrink-0">
             <FileText className="h-3.5 w-3.5 text-muted-foreground" />
@@ -166,7 +212,10 @@ export default function Review() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden flex flex-col h-[650px] max-h-[72vh]"
+          className={cn(
+            "rounded-2xl border border-border bg-card shadow-soft overflow-hidden flex flex-col h-[650px] max-h-[72vh]",
+            activeMobileTab === "protected" ? "flex" : "hidden lg:flex"
+          )}
         >
           <div className="flex items-center gap-2 px-5 py-3 border-b border-border/70 bg-primary/5 shrink-0">
             <ShieldCheck className="h-3.5 w-3.5 text-primary" />
@@ -188,7 +237,10 @@ export default function Review() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="rounded-2xl border border-border bg-card shadow-soft overflow-hidden lg:sticky lg:top-24 flex flex-col h-[650px] max-h-[72vh]"
+          className={cn(
+            "rounded-2xl border border-border bg-card shadow-soft overflow-hidden lg:sticky lg:top-24 flex flex-col h-[650px] max-h-[72vh]",
+            activeMobileTab === "inspector" ? "flex" : "hidden lg:flex"
+          )}
         >
           <EntitySidePanel
             entity={currentSelected}

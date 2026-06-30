@@ -47,6 +47,13 @@ export const api = {
       body: JSON.stringify({ document_id: documentId, entity_id: entityId, decision, edited_text: editedText }),
     }).then((r) => handle<{ success: boolean }>(r)),
 
+  addEntity: (documentId: string, entity: any) =>
+    fetch(`${BASE}/entity/add`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ document_id: documentId, entity }),
+    }).then((r) => handle<{ success: boolean }>(r)),
+
   challenge: (documentId: string, entityId: string) =>
     fetch(`${BASE}/challenge`, {
       method: "POST",

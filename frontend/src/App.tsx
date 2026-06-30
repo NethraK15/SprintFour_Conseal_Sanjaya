@@ -7,6 +7,8 @@ import Summary from "@/pages/Summary";
 import Verification from "@/pages/Verification";
 import TrustPassportPage from "@/pages/TrustPassportPage";
 import ExportPage from "@/pages/ExportPage";
+import Login from "@/pages/Login";
+import Signup from "@/pages/Signup";
 import NavBar from "@/components/NavBar";
 
 export default function App() {
@@ -16,6 +18,8 @@ export default function App() {
       <main className="flex-1">
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
           <Route path="/upload" element={<Upload />} />
           <Route path="/replay" element={<TrustReplay />} />
           <Route path="/summary" element={<Summary />} />

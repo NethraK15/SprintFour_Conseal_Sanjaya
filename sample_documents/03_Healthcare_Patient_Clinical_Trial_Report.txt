@@ -1,0 +1,21 @@
+ST. JUDE MEMORIAL RESEARCH HOSPITAL
+CLINICAL TRIAL STUDY ON LYMPHOCYTIC BIOMARKERS - RESTRICTED HIPAA DOCUMENT
+
+PATIENT CLINICAL DOSSIER
+Study ID: PROTOCOL-ONCO-2026-X
+Patient Name: Sarah Jenkins
+Date of Birth: 04/18/1984
+Medical Record Number (MRN): 994-821-003
+Primary Contact: +1-800-555-0144 | sarah.jenkins84@gmail.com
+
+ATTENDING PHYSICIAN: Dr. Aravind Mehta, MD, PhD
+Physician Email: dr.aravind.mehta@stjudehospital.org | Ext: 4402
+
+ADMISSION & TREATMENT DETAILS:
+Date of Admission: March 3, 2026
+Diagnosis: Stage IIB Follicular Lymphoma
+Experimental Intervention: Infusion of Bio-Agent ZT-409 at 12mg/kg.
+Total Cumulative Treatment Billing Cost: $84,500 (Covered under research grant #GR-9901).
+
+PROGRESS NOTES:
+Patient exhibited rapid reduction in tumor marker density within 14 days of infusion. No severe cardio-toxicity observed. Patient advised to follow up on June 15, 2026. This clinical narrative must be de-identified of all patient PII (Name, DOB, MRN, Email) before ingestion into medical research LLM analysis pipelines.

@@ -12,6 +12,7 @@ from .schemas import (
     DocumentUploadResponse,
     DetectionResponse,
     EntityDecisionUpdate,
+    DetectedEntity,
     VerificationResponse,
     VerificationCheck,
     TrustPassport,
@@ -99,6 +100,21 @@ def update_entity_decision(update: EntityDecisionUpdate):
             return {"success": True, "entity": entity}
 
     raise HTTPException(status_code=404, detail="Entity not found.")
+
+
+@app.post("/api/entity/add")
+def add_entity(payload: dict):
+    document_id = payload.get("document_id")
+    entity_data = payload.get("entity")
+    if not document_id or not entity_data:
+        raise HTTPException(status_code=400, detail="Missing document_id or entity.")
+    record = get_document(document_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="Document not found.")
+    entity = DetectedEntity(**entity_data)
+    record.entities.append(entity)
+    record.entities.sort(key=lambda e: e.start)
+    return {"success": True, "entity": entity}
 
 
 @app.post("/api/challenge", response_model=ChallengeResponse)

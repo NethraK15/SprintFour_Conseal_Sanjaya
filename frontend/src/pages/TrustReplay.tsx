@@ -7,12 +7,12 @@ import { api } from "@/lib/api";
 import { useDocument } from "@/hooks/useDocumentContext";
 
 const STAGES = [
-  { label: "Reading document", icon: FileSearch },
-  { label: "Detecting sensitive entities", icon: ScanSearch },
-  { label: "Understanding context", icon: Brain },
-  { label: "Generating explanations", icon: MessageSquareText },
-  { label: "Running verification", icon: ShieldCheck },
-  { label: "Preparing review", icon: ListChecks },
+  { label: "Reading document", icon: FileSearch, desc: "Parsing raw text & layout locally" },
+  { label: "Detecting entities", icon: ScanSearch, desc: "Scanning PII & financial figures" },
+  { label: "Contextual engine", icon: Brain, desc: "Evaluating sentence risk semantics" },
+  { label: "Generating audit", icon: MessageSquareText, desc: "Explaining why items were kept or hidden" },
+  { label: "Zero-leak check", icon: ShieldCheck, desc: "Simulating adversarial extraction" },
+  { label: "Preparing review", icon: ListChecks, desc: "Syncing 3-panel courtroom UI" },
 ];
 
 export default function TrustReplay() {
@@ -142,58 +142,84 @@ export default function TrustReplay() {
   }
 
   return (
-    <div className="container max-w-xl py-20 md:py-28">
-      <div className="text-center mb-14">
-        <h1 className="text-2xl md:text-3xl font-semibold tracking-tight mb-2">Sanjaya is at work</h1>
-        <p className="text-muted-foreground text-sm">Every step below is something you can verify afterward.</p>
+    <div className="container max-w-6xl py-14 md:py-20">
+      <div className="text-center mb-12">
+        <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary mb-3">
+          Zero-Trust Local Pipeline Active
+        </span>
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">Sanjaya is at work</h1>
+        <p className="text-muted-foreground text-sm md:text-base max-w-lg mx-auto">
+          Every step below is computed inside your local memory and can be interrogated or challenged afterward.
+        </p>
+
+        <div className="max-w-md mx-auto mt-6 bg-muted/60 h-2.5 rounded-full overflow-hidden p-0.5 border border-border">
+          <motion.div
+            className="h-full bg-gradient-to-r from-primary to-emerald-500 rounded-full"
+            initial={{ width: "0%" }}
+            animate={{ width: `${Math.min(100, ((activeStage + 1) / STAGES.length) * 100)}%` }}
+            transition={{ duration: 0.5 }}
+          />
+        </div>
       </div>
 
-      <div className="relative pl-2">
-        <div className="absolute left-[23px] top-2 bottom-2 w-px bg-border" />
-        <div className="space-y-2">
-          {STAGES.map((stage, idx) => {
-            const isComplete = completedStages.includes(idx);
-            const isActive = activeStage === idx && !isComplete;
-            const Icon = stage.icon;
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+        {STAGES.map((stage, idx) => {
+          const isComplete = completedStages.includes(idx);
+          const isActive = activeStage === idx && !isComplete;
+          const Icon = stage.icon;
 
-            return (
-              <motion.div
-                key={stage.label}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: idx <= activeStage ? 1 : 0.35, x: 0 }}
-                transition={{ duration: 0.4 }}
-                className="relative flex items-center gap-4 py-3"
+          return (
+            <motion.div
+              key={stage.label}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: idx <= activeStage + 1 ? 1 : 0.4, y: 0 }}
+              transition={{ duration: 0.4, delay: idx * 0.05 }}
+              className={`relative flex flex-col items-center text-center p-5 rounded-2xl border-2 transition-all duration-500 ${
+                isComplete
+                  ? "bg-card border-success/40 shadow-soft"
+                  : isActive
+                  ? "bg-primary/5 border-primary shadow-glow scale-105 z-10"
+                  : "bg-muted/20 border-border/60"
+              }`}
+            >
+              <div className="absolute top-2.5 right-2.5 text-[10px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                0{idx + 1}
+              </div>
+
+              <div
+                className={`h-14 w-14 rounded-2xl flex items-center justify-center mb-3.5 transition-colors duration-500 ${
+                  isComplete
+                    ? "bg-success/15 text-success"
+                    : isActive
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "bg-muted text-muted-foreground"
+                }`}
               >
-                <div
-                  className={`relative z-10 h-12 w-12 rounded-full flex items-center justify-center border-2 transition-colors duration-500 ${
-                    isComplete
-                      ? "bg-success border-success text-white"
-                      : isActive
-                      ? "bg-primary/10 border-primary text-primary"
-                      : "bg-card border-border text-muted-foreground"
-                  }`}
-                >
-                  <AnimatePresence mode="wait">
-                    {isComplete ? (
-                      <motion.div key="check" initial={{ scale: 0 }} animate={{ scale: 1 }}>
-                        <CheckCircle2 className="h-5 w-5" />
-                      </motion.div>
-                    ) : isActive ? (
-                      <motion.div key="spin">
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                      </motion.div>
-                    ) : (
-                      <Icon className="h-5 w-5" strokeWidth={1.8} />
-                    )}
-                  </AnimatePresence>
-                </div>
-                <span className={`font-medium ${isComplete ? "text-foreground" : isActive ? "text-primary" : "text-muted-foreground"}`}>
-                  {stage.label}
-                </span>
-              </motion.div>
-            );
-          })}
-        </div>
+                <AnimatePresence mode="wait">
+                  {isComplete ? (
+                    <motion.div key="check" initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                      <CheckCircle2 className="h-7 w-7" />
+                    </motion.div>
+                  ) : isActive ? (
+                    <motion.div key="active" className="relative flex items-center justify-center">
+                      <Loader2 className="h-7 w-7 animate-spin absolute opacity-30" />
+                      <Icon className="h-6 w-6" />
+                    </motion.div>
+                  ) : (
+                    <Icon className="h-6 w-6" />
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <span className={`font-semibold text-sm mb-1 ${isComplete ? "text-foreground" : isActive ? "text-primary font-bold" : "text-muted-foreground"}`}>
+                {stage.label}
+              </span>
+              <span className="text-[11px] text-muted-foreground leading-snug">
+                {stage.desc}
+              </span>
+            </motion.div>
+          );
+        })}
       </div>
     </div>
   );

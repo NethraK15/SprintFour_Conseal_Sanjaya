@@ -1,0 +1,24 @@
+STRICTLY CONFIDENTIAL - EXECUTIVE HUMAN RESOURCES MEMORANDUM
+SUBJECT: FY2026 EXECUTIVE BONUS & EQUITY COMPENSATION SCHEDULE
+RELEASE DATE: December 1, 2026
+
+TO: Samantha Thorne, Chief Financial Officer
+FROM: Global Compensation & Benefits Committee
+PREPARED BY: HR Payroll Operations (payroll-ops@conseal.ai)
+
+1. EXECUTIVE COMPENSATION SCHEDULE
+Below is the approved fiscal year compensation breakdown for senior executives. All salary and equity disbursements will occur via direct ACH transfer on December 15, 2026.
+
+Executive Name: Marcus Vance (CEO)
+Government ID / Tax PAN: ABCDE1234F
+Base Salary: $450,000
+Performance Incentive Bonus: $180,000
+International Bank Account Number (IBAN): GB82WEST12345698765432
+
+Executive Name: Elena Rostova (VP Corporate Dev)
+Government ID / Social Security: 412-88-0019
+Base Salary: $320,000
+Performance Incentive Bonus: $95,000
+Direct Contact Phone: +1-212-555-0144
+
+NOTE FOR HR ANALYSTS: Before feeding compensation benchmarking summaries into AI analytics suites, ensure executive Tax PANs, Social Security numbers, bank IBANs, and individual bonus allocations ($180,000) are hidden.
