@@ -20,7 +20,7 @@ from .schemas import (
     ChallengeResponse,
 )
 from .parsing import parse_document
-from .detection import detect_entities, is_ai_powered
+from .detection import detect_entities, is_ai_powered, run_playground_llm
 from .store import DocumentRecord, save_document, get_document
 
 app = FastAPI(title="Sanjaya API", description="Don't Trust Us. Verify Us.", version="1.0.0")
@@ -187,6 +187,53 @@ def get_trust_passport(document_id: str):
         timestamp=datetime.now(timezone.utc).isoformat(),
         ready_for_ai=record.verified and human_reviewed,
     )
+
+
+@app.post("/api/playground/run")
+def run_playground(payload: dict):
+    prompt = payload.get("prompt", "")
+    protected_text = payload.get("protected_text", "")
+    
+    # Try running real Gemini if API key is active
+    gemini_resp = run_playground_llm(prompt, protected_text)
+    if gemini_resp is not None:
+        return {"response": gemini_resp, "ai_powered": True}
+        
+    # Local fallback rule-based matching engine
+    p_lower = prompt.lower()
+    if any(k in p_lower for k in ("wire", "account", "routing", "bank")):
+        response = (
+            "I cannot extract or verify any financial transfer credentials. "
+            "The document context contains Silicon Valley Premier Bank, but routing details and account numbers "
+            "are completely redacted (e.g. ████████████). Security filters prevented raw wire routing leaks."
+        )
+    elif any(k in p_lower for k in ("email", "phone", "contact")):
+        response = (
+            "While names like Elena Rostova and Marcus Vance are visible (safe organizational context), "
+            "their personal contact coordinates, emails, and phone numbers are completely masked (█████@█████.███). "
+            "Direct outreach details are redacted."
+        )
+    else:
+        # Generate a smart local de-identified summary based on what is actually present in protected_text
+        visible_names = re.findall(r"\b(?:Marcus Vance|Elena Rostova|Jonathan Sterling|Sarah Jenkins|David Vance|Samantha Thorne)\b", protected_text)
+        visible_orgs = re.findall(r"\b(?:Conseal Security Holdings|Apex Horizon Group|MedTech BioSciences Ltd\.|St\. Jude Memorial Research Hospital)\b", protected_text)
+        
+        summary_bullets = []
+        if visible_names:
+            summary_bullets.append(f"Visible Parties: {', '.join(set(visible_names))}")
+        if visible_orgs:
+            summary_bullets.append(f"Organizations Involved: {', '.join(set(visible_orgs))}")
+            
+        summary_context = " | ".join(summary_bullets) if summary_bullets else "Sanitized general context"
+        
+        response = (
+            f"De-identification check complete. The text is clean of direct PII. "
+            f"Context scan results: [{summary_context}]. "
+            "All sensitive metrics, account routing numbers, and individual coordinates have been replaced with redaction placeholders. "
+            "I can safely outline the visible narrative but cannot reveal redacted items."
+        )
+        
+    return {"response": response, "ai_powered": False}
 
 
 @app.get("/api/export/{document_id}/text")

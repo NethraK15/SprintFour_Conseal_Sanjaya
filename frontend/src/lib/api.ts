@@ -61,6 +61,13 @@ export const api = {
       body: JSON.stringify({ document_id: documentId, entity_id: entityId }),
     }).then((r) => handle<ChallengeResponse>(r)),
 
+  runPlayground: (prompt: string, protectedText: string) =>
+    fetch(`${BASE}/playground/run`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt, protected_text: protectedText }),
+    }).then((r) => handle<{ response: string; ai_powered: boolean }>(r)),
+
   verify: (documentId: string) =>
     fetch(`${BASE}/verify/${documentId}`, { method: "POST" }).then((r) => handle<VerificationResponse>(r)),
 

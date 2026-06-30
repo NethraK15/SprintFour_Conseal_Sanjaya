@@ -275,3 +275,20 @@ def detect_entities(full_text: str) -> Tuple[List[DetectedEntity], bool]:
         if result is not None and len(result) > 0:
             return result, True
     return mock_detect(full_text), False
+
+
+def run_playground_llm(prompt: str, protected_text: str) -> Optional[str]:
+    if not is_ai_powered() or _genai_model is None:
+        return None
+    try:
+        system_instruction = (
+            "You are an AI assistant answering a user request based ON THE PROVIDED REDACTED CONTEXT ONLY. "
+            "Do not use external knowledge or attempt to guess masked values. "
+            "If the context contains placeholders like '█████ REDACTED', you must treat them as completely hidden and explain that you do not have access to that information. "
+            "Do not reveal any private credentials."
+        )
+        full_prompt = f"{system_instruction}\n\n[USER PROMPT]\n{prompt}\n\n[DOCUMENT CONTEXT]\n{protected_text}"
+        response = _genai_model.generate_content(full_prompt)
+        return response.text.strip()
+    except Exception as e:
+        return f"Gemini Error: {str(e)}"
