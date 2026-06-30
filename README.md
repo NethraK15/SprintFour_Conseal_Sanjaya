@@ -111,6 +111,4 @@ The app will be available at `http://127.0.0.1:5173`. The Vite dev server proxie
 - Document state is stored in-memory in the backend process for simplicity; restarting the backend clears all sessions.
 - The mock detection engine uses regex-based heuristics tuned to feel realistic (confidence scores, contextual reasoning, risk explanations) — swap in your Gemini API key any time to switch to real AI-powered detection with zero code changes on the frontend.
 
-## Screenshots
 
-_Add screenshots of the Landing, Review, AI Courtroom, and Trust Passport screens here._
