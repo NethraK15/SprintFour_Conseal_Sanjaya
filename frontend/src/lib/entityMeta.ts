@@ -20,8 +20,8 @@ export const ENTITY_COLORS: Record<EntityType, string> = {
   BANK_ACCOUNT: "bg-rose-100 text-rose-800 border-rose-200",
   PASSPORT: "bg-indigo-100 text-indigo-800 border-indigo-200",
   PAN: "bg-cyan-100 text-cyan-800 border-cyan-200",
-  DATE: "bg-slate-100 text-slate-700 border-slate-200",
-  ORGANIZATION: "bg-orange-100 text-orange-800 border-orange-200",
+  DATE: "bg-emerald-50 text-emerald-900 border-emerald-300 underline decoration-emerald-500 decoration-dotted",
+  ORGANIZATION: "bg-emerald-50 text-emerald-900 border-emerald-300 underline decoration-emerald-500 decoration-dotted",
 };
 
 export function confidenceTone(confidence: number) {

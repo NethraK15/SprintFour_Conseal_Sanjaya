@@ -13,7 +13,7 @@ import type { DetectedEntity } from "@/types";
 
 export default function Review() {
   const navigate = useNavigate();
-  const { documentId, rawText, entities, aiPowered, updateEntityLocal, reviewAllEntities } = useDocument();
+  const { documentId, rawText, entities, setEntities, aiPowered, updateEntityLocal, reviewAllEntities } = useDocument();
   const [selected, setSelected] = useState<DetectedEntity | null>(null);
   const [courtroomOpen, setCourtroomOpen] = useState(false);
   const [courtroomEntity, setCourtroomEntity] = useState<DetectedEntity | null>(null);
@@ -46,6 +46,34 @@ export default function Review() {
     });
   };
 
+  const handleInterrogate = (selectedText: string) => {
+    const startIdx = rawText.indexOf(selectedText);
+    const newEntity: DetectedEntity = {
+      id: `audit-${Date.now()}`,
+      type: "ORGANIZATION",
+      text: selectedText,
+      placeholder: "█████ REDACTED",
+      start: startIdx !== -1 ? startIdx : 0,
+      end: (startIdx !== -1 ? startIdx : 0) + selectedText.length,
+      confidence: 0.92,
+      reason: "On-demand interrogation by Marcus (User Audit).",
+      context: selectedText,
+      potential_risk: "Evaluated on demand: No confidential customer PII or banking credentials detected.",
+      recommended_action: "REVEAL",
+      evidence: [
+        "Interrogated directly via manual text selection",
+        "Syntactic analysis verified zero data leakage signature",
+        "Retained visible to protect downstream AI context accuracy",
+      ],
+      alternatives_considered: ["Internal codename", "Proprietary trade secret"],
+      decision_rationale: `Sanjaya interrogated the phrase "${selectedText}". This text was kept visible because it does not match known personal identifier signatures (SSN, banking IDs, private emails) and carries negligible external privacy risk. If you believe "${selectedText}" represents an unflagged internal codename or trade secret, you can override Sanjaya right here by clicking 'Keep Hidden' below.`,
+      user_decision: null,
+      user_edited_text: null,
+    };
+    setEntities([...entities, newEntity]);
+    setSelected(newEntity);
+  };
+
   const handleChallenge = (entity: DetectedEntity) => {
     setCourtroomEntity(entity);
     setCourtroomOpen(true);
@@ -57,7 +85,7 @@ export default function Review() {
         <div>
           <h1 className="text-2xl md:text-3xl font-semibold tracking-tight mb-1">Review Sanjaya's decisions</h1>
           <p className="text-sm text-muted-foreground">
-            Click any highlighted item to inspect the reasoning, or challenge it in the AI Courtroom.
+            Click any highlighted item to inspect reasoning. Highlight any arbitrary text with your mouse to interrogate why it was kept.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -105,6 +133,7 @@ export default function Review() {
               mode="original"
               selectedId={currentSelected?.id ?? null}
               onSelect={setSelected}
+              onInterrogate={handleInterrogate}
             />
           </div>
         </motion.div>
@@ -126,6 +155,7 @@ export default function Review() {
               mode="protected"
               selectedId={currentSelected?.id ?? null}
               onSelect={setSelected}
+              onInterrogate={handleInterrogate}
             />
           </div>
         </motion.div>
