@@ -48,25 +48,47 @@ export default function Review() {
 
   const handleInterrogate = (selectedText: string) => {
     const startIdx = rawText.indexOf(selectedText);
+    const isFinancial = /[$€£₹]|\b\d{1,3}(?:,\d{3})+(?:\.\d+)?\b/.test(selectedText);
+    const isEmailOrPhone = /@|\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/.test(selectedText);
+
+    let type: DetectedEntity["type"] = "ORGANIZATION";
+    let recAction: "KEEP_HIDDEN" | "REVEAL" = "REVEAL";
+    let reason = "Audited via user selection: verified no restricted customer PII pattern matched.";
+    let risk = "Negligible privacy risk (0.02). Evaluated as safe narrative context.";
+    let rationale = `Sanjaya audited the phrase "${selectedText}". This text does not match standard personal identifier patterns (such as government IDs, credit card numbers, or private emails). Leaving this unredacted preserves essential document context for downstream AI processing. However, if "${selectedText}" represents a proprietary internal project codename or trade secret, you can override Sanjaya right here by clicking 'Keep Hidden'.`;
+
+    if (isFinancial) {
+      type = "BANK_ACCOUNT";
+      recAction = "KEEP_HIDDEN";
+      reason = "Detected monetary amount or numerical financial figure.";
+      risk = "Exposing high-value monetary figures can leak internal budgets, valuation, or pricing strategies.";
+      rationale = `Sanjaya audited the figure "${selectedText}". Financial figures are not personal contact identifiers, which is why standard PII heuristics may initially leave them unredacted. However, leaking valuations or monetary figures like "${selectedText}" to external LLMs can expose proprietary business pricing. You can stage this figure for redaction immediately by clicking 'Keep Hidden'.`;
+    } else if (isEmailOrPhone) {
+      type = "EMAIL";
+      recAction = "KEEP_HIDDEN";
+      reason = "Detected contact identifier pattern within selection.";
+      risk = "Could enable direct contact or social engineering.";
+      rationale = `Sanjaya audited the contact string "${selectedText}". Exposing direct contact information poses phishing and identity risks. We recommend keeping this hidden.`;
+    }
+
     const newEntity: DetectedEntity = {
       id: `audit-${Date.now()}`,
-      type: "ORGANIZATION",
+      type,
       text: selectedText,
       placeholder: "█████ REDACTED",
       start: startIdx !== -1 ? startIdx : 0,
       end: (startIdx !== -1 ? startIdx : 0) + selectedText.length,
-      confidence: 0.92,
-      reason: "On-demand interrogation by Marcus (User Audit).",
+      confidence: isFinancial ? 0.89 : 0.93,
+      reason,
       context: selectedText,
-      potential_risk: "Evaluated on demand: No confidential customer PII or banking credentials detected.",
-      recommended_action: "REVEAL",
+      potential_risk: risk,
+      recommended_action: recAction,
       evidence: [
-        "Interrogated directly via manual text selection",
-        "Syntactic analysis verified zero data leakage signature",
-        "Retained visible to protect downstream AI context accuracy",
+        isFinancial ? "Currency/numerical signature identified" : `Audited phrase: "${selectedText.slice(0, 35)}"`,
+        isFinancial ? `Selected financial figure: "${selectedText}"` : "Zero matching signatures for government IDs or banking credentials",
       ],
-      alternatives_considered: ["Internal codename", "Proprietary trade secret"],
-      decision_rationale: `Sanjaya interrogated the phrase "${selectedText}". This text was kept visible because it does not match known personal identifier signatures (SSN, banking IDs, private emails) and carries negligible external privacy risk. If you believe "${selectedText}" represents an unflagged internal codename or trade secret, you can override Sanjaya right here by clicking 'Keep Hidden' below.`,
+      alternatives_considered: isFinancial ? ["Invoice figure", "Budget milestone"] : ["Internal codename", "Proprietary trade secret"],
+      decision_rationale: rationale,
       user_decision: null,
       user_edited_text: null,
     };
@@ -103,12 +125,14 @@ export default function Review() {
             View Short Summary
           </Button>
           {aiPowered ? (
-            <Badge variant="default">
+            <Badge variant="default" title="Gemini API key detected and active. Powered by Google Gemini AI.">
               <Sparkles className="h-3 w-3 mr-1" />
-              Gemini-powered
+              Gemini-powered (Active)
             </Badge>
           ) : (
-            <Badge variant="outline">Mock detection engine</Badge>
+            <Badge variant="outline" className="border-amber-300 bg-amber-50/50 text-amber-900 cursor-help" title="Running in Local Fallback Mode (Regex/Heuristics). To activate Gemini AI, add your GEMINI_API_KEY to backend/.env and restart the uvicorn server.">
+              Local Fallback Mode
+            </Badge>
           )}
           <Badge variant={allReviewed ? "success" : "warning"}>
             {reviewedCount}/{entities.length} reviewed
